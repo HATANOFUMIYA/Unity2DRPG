@@ -1,0 +1,68 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
+public class TitleManager : MonoBehaviour {
+
+    //シーン移動中かどうかの変数 true:押された false:押されていない
+    bool scene_change_judge = false;
+
+    //押された効果音再生
+    private AudioSource touch_music;
+
+    [Header("アニメーションオブジェクト")]
+    [SerializeField]
+    Image scene_animation;
+
+    //シーン切り替え間隔
+    int scene_interval;
+
+    //シーン切り替えの処理
+    private void Title_Scene_Change()
+    {
+        //3秒後シーンを切り替える
+        if (scene_change_judge == true)
+        {
+            //シーン切り替え間隔
+            scene_interval++;
+
+            //シーン切り替える
+            if (scene_interval >= 180)
+            {
+                //シーンの読み込み
+                SceneManager.LoadScene("Game_Opening");
+            }
+
+        }
+    }
+
+
+	// Use this for initialization
+	void Start () {
+        //効果音
+        touch_music = GetComponent<AudioSource>();
+
+	}
+
+    //タッチして次のシーンへ移行
+    public void On_Touch_Event()
+    {
+        if (scene_change_judge == false)
+        {
+            //効果音
+            touch_music.Play();
+            //シーン切り替えアニメーション
+            scene_animation.gameObject.SetActive(true);
+            //シーン切り替え判定
+            scene_change_judge = true;
+        }
+        
+    }
+    void Update()
+    {
+        //シーン切り替えの処理
+        Title_Scene_Change();
+    }
+}
