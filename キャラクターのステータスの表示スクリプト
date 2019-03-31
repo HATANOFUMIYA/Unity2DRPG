@@ -1,0 +1,339 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class Character_Status_Display_Manager : MonoBehaviour {
+
+    [Header("キャラクターステータスを呼び出す")]
+    [SerializeField]
+    Character_Status cs;
+    
+
+    [Header("シオンの体力を表示")]
+    [SerializeField]
+    Text shion_hp;
+
+    [Header("シオンの魔力を表示")]
+    [SerializeField]
+    Text shion_mp;
+
+    [Header("マインの体力を表示")]
+    [SerializeField]
+    Text main_hp;
+
+    [Header("マインの魔力を表示")]
+    [SerializeField]
+    Text main_mp;
+
+    [Header("ガイアの体力を表示")]
+    [SerializeField]
+    Text gaia_hp;
+
+    [Header("ガイアの魔力を表示")]
+    [SerializeField]
+    Text gaia_mp;
+
+    [Header("ネネの体力を表示")]
+    [SerializeField]
+    Text nene_hp;
+
+    [Header("ネネの魔力を表示")]
+    [SerializeField]
+    Text nene_mp;
+
+    [Header("シオンの体力を表示")]
+    [SerializeField]
+    Slider shion_hp_bar;
+
+    [Header("シオンの魔力を表示")]
+    [SerializeField]
+    Slider shion_mp_bar;
+
+    [Header("マインの体力を表示")]
+    [SerializeField]
+    Slider main_hp_bar;
+
+    [Header("マインの魔力を表示")]
+    [SerializeField]
+    Slider main_mp_bar;
+
+    [Header("ガイアの体力を表示")]
+    [SerializeField]
+    Slider gaia_hp_bar;
+
+    [Header("ガイアの魔力を表示")]
+    [SerializeField]
+    Slider gaia_mp_bar;
+
+    [Header("ネネの体力を表示")]
+    [SerializeField]
+    Slider nene_hp_bar;
+
+    [Header("ネネの魔力を表示")]
+    [SerializeField]
+    Slider nene_mp_bar;
+
+    //各キャラクターのアニメーターを呼び出す
+    [Header("シオンの攻撃のアニメーション")]
+    [SerializeField]
+    Animator shion_animation;
+
+    //各キャラクターのアニメーターを呼び出す
+    [Header("マインの攻撃のアニメーション")]
+    [SerializeField]
+    Animator main_animation;
+
+    //各キャラクターのアニメーターを呼び出す
+    [Header("ガイアの攻撃のアニメーション")]
+    [SerializeField]
+    Animator gaia_animation;
+
+    //各キャラクターのアニメーターを呼び出す
+    [Header("ネネの攻撃のアニメーション")]
+    [SerializeField]
+    Animator nene_animation;
+
+    //各キャラクターの毒アイコン
+    [Header("シオンの毒アイコン")]
+    [SerializeField]
+    Image shion_poison_icon;
+
+    //各キャラクターの毒アイコン
+    [Header("マインの毒アイコン")]
+    [SerializeField]
+    Image main_poison_icon;
+
+    //各キャラクターの毒アイコン
+    [Header("ガイアの毒アイコン")]
+    [SerializeField]
+    Image gaia_poison_icon;
+
+    //各キャラクターの毒アイコン
+    [Header("ネネの毒アイコン")]
+    [SerializeField]
+    Image nene_poison_icon;
+
+    [Header("毒状態判定 true:毒状態 false:毒でない状態")]
+    public bool[] status_poison_judge = { false, false, false, false, false };
+
+    //キャラクターの情報を表示
+    private void Character_Status_Display_Text()
+    {
+
+        //シオンの最大HPと現在のHPを表示
+        shion_hp.text = "HP" + cs.GetComponent<Character_Status>().ss.shion_hp + "/" + cs.GetComponent<Character_Status>().ss.shion_max_hp.ToString();
+        //シオンの最大MPと現在のMPを表示
+        shion_mp.text = "MP" + cs.GetComponent<Character_Status>().ss.shion_mp + "/" + cs.GetComponent<Character_Status>().ss.shion_max_mp.ToString();
+        //マインの最大HPと現在のHPを表示
+        main_hp.text = "HP" + cs.GetComponent<Character_Status>().ms.main_hp + "/" + cs.GetComponent<Character_Status>().ms.main_max_hp.ToString();
+        //マインの最大MPと現在のMPを表示
+        main_mp.text = "MP" + cs.GetComponent<Character_Status>().ms.main_mp + "/" + cs.GetComponent<Character_Status>().ms.main_max_mp.ToString();
+        //ガイアの最大HPと現在のHPを表示
+        gaia_hp.text = "HP" + cs.GetComponent<Character_Status>().gs.gaia_hp + "/" + cs.GetComponent<Character_Status>().gs.gaia_max_hp.ToString();
+        //ガイアの最大MPと現在のMPを表示
+        gaia_mp.text = "MP" + cs.GetComponent<Character_Status>().gs.gaia_mp + "/" + cs.GetComponent<Character_Status>().gs.gaia_max_mp.ToString();
+        //ネネの最大HPと現在のHPを表示
+        nene_hp.text = "HP" + cs.GetComponent<Character_Status>().ns.nene_hp + "/" + cs.GetComponent<Character_Status>().ns.nene_max_hp.ToString();
+        //ネネの最大MPと現在のMPを表示
+        nene_mp.text = "MP" + cs.GetComponent<Character_Status>().ns.nene_mp + "/" + cs.GetComponent<Character_Status>().ns.nene_max_mp.ToString();
+
+        //キャラクターのHPが0になった時の処理
+        if (cs.GetComponent<Character_Status>().ss.shion_hp <= 0)
+        {
+            //0以下になった場合0にする
+            cs.GetComponent<Character_Status>().ss.shion_hp = 0;
+            //死んだ判定にする
+            cs.GetComponent<Character_Status>().ss.shion_dead_judge = true;
+        }
+        print(cs.GetComponent<Character_Status>().ms.main_dead_judge);
+
+        //キャラクターのHPが0になった時の処理
+        if (cs.GetComponent<Character_Status>().ms.main_hp <= 0)
+        {
+            //0以下になった場合0にする
+            cs.GetComponent<Character_Status>().ms.main_hp = 0;
+            //死んだ判定にする
+            cs.GetComponent<Character_Status>().ms.main_dead_judge = true;
+        }
+
+        //キャラクターのHPが0になった時の処理
+        if (cs.GetComponent<Character_Status>().gs.gaia_hp <= 0)
+        {
+            //0以下になった場合0にする
+            cs.GetComponent<Character_Status>().gs.gaia_hp = 0;
+            //死んだ判定にする
+            cs.GetComponent<Character_Status>().gs.gaia_dead_judge = true;
+        }
+
+        //キャラクターのHPが0になった時の処理
+        if (cs.GetComponent<Character_Status>().ns.nene_hp <= 0)
+        {
+            //0以下になった場合0にする
+            cs.GetComponent<Character_Status>().ns.nene_hp = 0;
+            //死んだ判定にする
+            cs.GetComponent<Character_Status>().ns.nene_dead_judge = true;
+        }
+
+        //体力をスライダーに格納(シオン)
+        shion_hp_bar.maxValue = cs.GetComponent<Character_Status>().ss.shion_max_hp;
+        shion_hp_bar.value = cs.GetComponent<Character_Status>().ss.shion_hp;
+
+        //魔力をスライダーに格納(シオン)
+        shion_mp_bar.maxValue = cs.GetComponent<Character_Status>().ss.shion_max_mp;
+        shion_mp_bar.value = cs.GetComponent<Character_Status>().ss.shion_mp;
+
+        //体力をスライダーに格納(マイン)
+        main_hp_bar.maxValue = cs.GetComponent<Character_Status>().ms.main_max_hp;
+        main_hp_bar.value = cs.GetComponent<Character_Status>().ms.main_hp;
+
+        //魔力をスライダーに格納(マイン)
+        main_mp_bar.maxValue = cs.GetComponent<Character_Status>().ms.main_max_mp;
+        main_mp_bar.value = cs.GetComponent<Character_Status>().ms.main_mp;
+
+        //体力をスライダーに格納(ガイア)
+        gaia_hp_bar.maxValue = cs.GetComponent<Character_Status>().gs.gaia_max_hp;
+        gaia_hp_bar.value = cs.GetComponent<Character_Status>().gs.gaia_hp;
+
+        //魔力をスライダーに格納(ガイア)
+        gaia_mp_bar.maxValue = cs.GetComponent<Character_Status>().gs.gaia_max_mp;
+        gaia_mp_bar.value = cs.GetComponent<Character_Status>().gs.gaia_mp;
+
+
+        //体力をスライダーに格納(ネネ)
+        nene_hp_bar.maxValue = cs.GetComponent<Character_Status>().ns.nene_max_hp;
+        nene_hp_bar.value = cs.GetComponent<Character_Status>().ns.nene_hp;
+
+        //魔力をスライダーに格納(ネネ)
+        nene_mp_bar.maxValue = cs.GetComponent<Character_Status>().ns.nene_max_mp;
+        nene_mp_bar.value = cs.GetComponent<Character_Status>().ns.nene_mp;
+
+    }
+
+    //各キャラクターの死んだときのアニメーション
+    private void Dead_judgment()
+    {
+        //シオンが死んでいたら死んでいるアニメーションを再生
+        if (cs.ss.shion_dead_judge == true)
+        {
+            shion_animation.SetBool("Dead_Shion", true);
+        }
+
+        //マインが死んでいたら死んでいるアニメーションを再生
+        if (cs.ms.main_dead_judge == true)
+        {
+            main_animation.SetBool("Dead_Main", true);
+        }
+
+        //ガイアが死んでいたら死んでいるアニメーションを再生
+        if (cs.gs.gaia_dead_judge == true)
+        {
+            gaia_animation.SetBool("Dead_Gaia", true);
+        }
+
+        //ネネが死んでいたら死んでいるアニメーションを再生
+        if (cs.ns.nene_dead_judge == true)
+        {
+            nene_animation.SetBool("Dead_Nene", true);
+        }
+
+    }
+    //生きているときのアニメーション
+    private void Life_judgment()
+    {
+        //シオンが死んでいたら死んでいるアニメーションを再生
+        if (cs.ss.shion_dead_judge == false)
+        {
+            shion_animation.SetBool("Dead_Shion", false);
+        }
+
+        //マインが死んでいたら死んでいるアニメーションを再生
+        if (cs.ms.main_dead_judge == false)
+        {
+            main_animation.SetBool("Dead_Main", false);
+        }
+
+        //ガイアが死んでいたら死んでいるアニメーションを再生
+        if (cs.gs.gaia_dead_judge == false)
+        {
+            gaia_animation.SetBool("Dead_Gaia", false);
+        }
+
+        //ネネが死んでいたら死んでいるアニメーションを再生
+        if (cs.ns.nene_dead_judge == false)
+        {
+            nene_animation.SetBool("Dead_Nene", false);
+        }
+    }
+
+    enum STATUS_JUDGE
+    {
+        CHOICE_JUDGE_MIN,
+        SHION,
+        MAIN,
+        GAIA,
+        NENE,
+        CHOICE_JUDGE_MAX
+    }
+
+    private void Poison_Status()
+    {
+        //もし毒状態であればアイコンを表示
+        if (status_poison_judge[(int)STATUS_JUDGE.SHION] == true)
+        {
+            shion_poison_icon.gameObject.SetActive(true);
+        }
+        else
+        {
+            shion_poison_icon.gameObject.SetActive(false);
+        }
+
+        //もし毒状態であればアイコンを表示
+        if (status_poison_judge[(int)STATUS_JUDGE.MAIN] == true)
+        {
+            main_poison_icon.gameObject.SetActive(true);
+        }
+        else
+        {
+            main_poison_icon.gameObject.SetActive(false);
+        }
+
+        //もし毒状態であればアイコンを表示
+        if (status_poison_judge[(int)STATUS_JUDGE.GAIA] == true)
+        {
+            gaia_poison_icon.gameObject.SetActive(true);
+        }
+        else
+        {
+            gaia_poison_icon.gameObject.SetActive(false);
+        }
+
+        //もし毒状態であればアイコンを表示
+        if (status_poison_judge[(int)STATUS_JUDGE.NENE] == true)
+        {
+            nene_poison_icon.gameObject.SetActive(true);
+        }
+        else
+        {
+            nene_poison_icon.gameObject.SetActive(false);
+        }
+
+    }
+
+    // Use this for initialization
+    void Start () {
+
+    }
+	
+	// Update is called once per frame
+	void Update () {
+        //死んでいるときのアニメーション
+        Dead_judgment();
+        //生きているときのアニメーション
+        Life_judgment();
+        //キャラクターの情報を表示
+        Character_Status_Display_Text();
+        //毒のアイコン表示
+        Poison_Status();
+    }
+}
