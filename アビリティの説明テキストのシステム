@@ -1,0 +1,163 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+using UnityEngine.UI;
+
+public class Character_Ability_Text : MonoBehaviour {
+
+    enum ABILITY_TEXT_JUDGE
+    {
+        SHION,
+        MAIN,
+        GAIA,
+        NENE,
+    }
+
+    [Header("アビリティの説明テキスト背景")]
+    [SerializeField]
+    GameObject teach_background;
+
+    [Header("アビリティの説明テキスト")]
+    [SerializeField]
+    Text [] ability_text = new Text[3];
+
+    [Header("アビリティの説明テキスト")]
+    public bool[] character_ability_text = new bool[4];
+
+    int ability_text_interval = 0;
+
+    int [] cancel_text_judge = {0,1,2,3  };
+
+    string[] ability_text_teach = 
+    {
+       "アビリティ1:気合斬り" + "\r\n" + "気合で相手を斬ります。" + "消費MPは50",
+       "アビリティ2:一刀両断" + "\r\n" +"強めに相手を斬ります。通常よりも大きなダメージを与えます。"+ "消費MPは80",
+       "アビリティ3:応急処置" + "\r\n" +"自身に応急処置を行います。体力が大きく回復します。"+ "消費MPは80",
+       "アビリティ1:光彩陸離" + "\r\n" +"様々な火花を出し、相手に攻撃します。"+ "消費MPは50",
+       "アビリティ2:疾風迅雷" + "\r\n" + "素早いスピードで相手を斬りつけ、相手に雷攻撃をします。"+ "消費MPは90",
+       "アビリティ3:背水之陣" + "\r\n" + "相手のチャージが多く溜っていればいるほど大きなダメージを与えます"+ "消費MPは120",
+       "アビリティ1スロウ:" + "\r\n" + "相手のチャージを1つ減らします。"+ "消費MPは60",
+       "アビリティ2:ジャンプ" + "\r\n" + "相手に確率で大きなダメージを与えます。"+ "消費MPは80",
+       "アビリティ3:ロウマンブレイク" + "\r\n" + "自身のHPが少なければ少ないほど大きなダメージを与えます。"+ "消費MPは120",
+       "アビリティ1:エスナ" + "\r\n" + "キャラクターのステータス異常を回復します。"+ "消費MPは30",
+       "アビリティ2:オールキュア" + "\r\n" + "味方全体のHPを大きく回復します"+ "消費MPは70",
+       "アビリティ3:リセクタブル" + "\r\n" + "1ターンだけ味方キャラクターの被ダメージを軽減します。"+ "消費MPは120",
+       
+    };
+
+    //ボタンの長押しの検知
+    public void Button_Down_Push_Shion()
+    {
+        character_ability_text[(int)ABILITY_TEXT_JUDGE.SHION] = true;
+    }
+
+    //ボタンの長押しの検知
+    public void Button_Down_Push_Main()
+    {
+        character_ability_text[(int)ABILITY_TEXT_JUDGE.MAIN] = true;
+    }
+
+    //ボタンの長押しの検知
+    public void Button_Down_Push_Gaia()
+    {
+        character_ability_text[(int)ABILITY_TEXT_JUDGE.GAIA] = true;
+    }
+
+    //ボタンの長押しの検知
+    public void Button_Down_Push_Nene()
+    {
+        character_ability_text[(int)ABILITY_TEXT_JUDGE.NENE] = true;
+    }
+
+    //ボタンの離したときの検知
+    public void Button_Up()
+    {
+        foreach (int i in cancel_text_judge) {
+
+            character_ability_text[i] = false;
+        }
+        ability_text_interval = 0;
+        teach_background.gameObject.SetActive(false);
+        ability_text[0].text = "";
+        ability_text[1].text = "";
+        ability_text[2].text = "";
+    }
+
+    private void Ability_Teach_Text_System()
+    {
+        //アビリティの説明テキスト
+        if (character_ability_text[(int)ABILITY_TEXT_JUDGE.SHION] == true)
+        {
+            ability_text_interval++;
+
+            if (ability_text_interval > 60)
+            {
+                teach_background.gameObject.SetActive(true);
+                ability_text[0].text = ability_text_teach[0];
+                ability_text[1].text = ability_text_teach[1];
+                ability_text[2].text = ability_text_teach[2];
+            }
+            
+        }
+        
+        //アビリティの説明テキスト
+        if (character_ability_text[(int)ABILITY_TEXT_JUDGE.MAIN] == true)
+        {
+            ability_text_interval++;
+
+            if (ability_text_interval > 60)
+            {
+                teach_background.gameObject.SetActive(true);
+                ability_text[0].text = ability_text_teach[3];
+                ability_text[1].text = ability_text_teach[4];
+                ability_text[2].text = ability_text_teach[5];
+            }
+
+        }
+        
+        //アビリティの説明テキスト
+        if (character_ability_text[(int)ABILITY_TEXT_JUDGE.GAIA] == true)
+        {
+            ability_text_interval++;
+
+            if (ability_text_interval > 60)
+            {
+                teach_background.gameObject.SetActive(true);
+                ability_text[0].text = ability_text_teach[6];
+                ability_text[1].text = ability_text_teach[7];
+                ability_text[2].text = ability_text_teach[8];
+            }
+
+        }
+      
+
+        //アビリティの説明テキスト
+        if (character_ability_text[(int)ABILITY_TEXT_JUDGE.NENE] == true)
+        {
+            ability_text_interval++;
+
+            if (ability_text_interval > 60)
+            {
+                teach_background.gameObject.SetActive(true);
+                ability_text[0].text = ability_text_teach[9];
+                ability_text[1].text = ability_text_teach[10];
+                ability_text[2].text = ability_text_teach[11];
+            }
+
+        }
+        
+
+    }
+
+    // Use this for initialization
+    void Start () {
+		
+	}
+	
+	// Update is called once per frame
+	void Update () {
+        Ability_Teach_Text_System();
+
+    }
+}
