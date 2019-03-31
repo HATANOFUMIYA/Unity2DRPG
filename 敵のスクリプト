@@ -1,0 +1,927 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class Satan_Script : MonoBehaviour {
+
+    [Header("キャラクターステータス")]
+    [SerializeField]
+    Character_Status cs;
+
+    [Header("サタンの体力バー")]
+    [SerializeField]
+    Slider satan_hp_bar;
+
+    [Header("キャラクターのアビリティ管理スクリプト")]
+    [SerializeField]
+    Characters_Battle_Ability_Manager cbam;
+
+    [Header("ステータス表示スクリプト")]
+    [SerializeField]
+    Character_Status_Display_Manager csdm;
+
+    [Header("サタンの攻撃ターン")]
+    public bool satan_attack_turn = false;
+
+    [Header("シオンに攻撃した時のテキスト")]
+    [SerializeField]
+    Text satan_attack_shion_damage_text;
+
+    [Header("マインに攻撃した時のテキスト")]
+    [SerializeField]
+    Text satan_attack_main_damage_text;
+
+    [Header("ガイアに攻撃した時のテキスト")]
+    [SerializeField]
+    Text satan_attack_gaia_damage_text;
+
+    [Header("ネネに攻撃した時のテキスト")]
+    [SerializeField]
+    Text satan_attack_nene_damage_text;
+
+    [Header("サタンが攻撃する判定 true:攻撃中 false: 味方の攻撃")]
+    public bool satan_attack_judge = false;
+
+    [Header("サタンがアビリティ攻撃する判定 true:攻撃中 false: 味方の攻撃")]
+    public bool satan_ability_attack_judge = false;
+
+    [Header("オーディオプレイヤーを呼び出す")]
+    [SerializeField]
+    AudioSource audio_player;
+
+    [Header("通常攻撃効果音を呼び出す")]
+    [SerializeField]
+    AudioClip satan_normal_attack_music;
+
+    [Header("大魔法攻撃効果音1を呼び出す")]
+    [SerializeField]
+    AudioClip satan_big_magic_music1;
+
+    [Header("大魔法攻撃効果音2を呼び出す")]
+    [SerializeField]
+    AudioClip satan_big_magic_music2;
+
+    //サタンが攻撃した効果音を一度だけ再生
+    bool satan_attack_music_judge = false;
+
+    //サタンが攻撃した効果音を一度だけ再生
+    bool satan_big_magic_music_judge1 = false;
+
+    //サタンが攻撃した効果音を一度だけ再生
+    bool satan_big_magic_music_judge2 = false;
+
+    //サタンのチャージ変数 0:バトル開始時または奥義後  1:一度行動した後  2:二度行動した後  3:三度行動した後 4 奥義発動
+    public int satan_charge = 0;
+
+    //奥義開始カウント
+    int big_magic_count;
+
+    //大魔法を唱えるかどうかの判定 true:唱えている状態 false:唱えていない状態
+    public bool big_magic_judge = false;
+
+    [Header("チャージ画像")]
+    [SerializeField]
+    Image[] charge_image;
+
+    [Header("攻撃開始ボタン")]
+    [SerializeField]
+    Button attack_stsart_button;
+
+    enum ATTACK_SATAN
+    {
+        CHOICE_JUDGE_MIN,
+        SHION,
+        MAIN,
+        GAIA,
+        NENE,
+        CHOICE_JUDGE_MAX
+    }
+
+    [Header("サタンのシオンに対する攻撃アニメ―ション")]
+    [SerializeField]
+    Image satan_attack_shion_image;
+
+    [Header("サタンのマインに対する攻撃アニメ―ション")]
+    [SerializeField]
+    Image satan_attack_main_image;
+
+    [Header("サタンのガイアに対する攻撃アニメ―ション")]
+    [SerializeField]
+    Image satan_attack_gaia_image;
+
+    [Header("サタンのネネに対する攻撃アニメ―ション")]
+    [SerializeField]
+    Image satan_attack_nene_image;
+
+    [Header("サタンの全体の仲間に対する攻撃アニメ―ション(奥義)")]
+    [SerializeField]
+    Image satan_attack_all_character_image;
+
+    //相手キャラクターにサタンが攻撃する判定
+    public int random_attack_choice;
+
+    //ランダムでダメージ数値を決定
+    int random_damage_satan;
+
+    //ランダムでダメージ数値を決定
+    int[] random_damage_satan_magic = new int[4];
+
+    //攻撃間隔
+    int satan_attack_interval = 0;
+
+    //一定の確率でアビリティを発動(50%)
+    public int poison_claws = 0;
+
+    //毒状態になる確率(20％)
+    public int poison_judge = 0;
+
+    public int [] satan_charge_num = {0,1,2 };
+
+    public class Satan_Enemy_STATUS
+    {
+        //サタンの最大HP
+        public float satan_max_hp;
+        //サタンのHP
+        public float satan_hp;
+        //サタンの最大攻撃力
+        public int satan_max_power;
+        //サタンの攻撃力
+        public int satan_power;
+        //サタンの防御力
+        public int satan_shield;
+        //サタンの最大奥義
+        public int satan_max_skill;
+        //サタンの奥義
+        public int satan_skill;
+
+        //コンストラクター
+        public Satan_Enemy_STATUS()
+        {
+            //サタンの最大HP(20万)
+            satan_max_hp = 200000;
+            //サタンのHP
+            satan_hp = 200000;
+            //サタンの最大攻撃力
+            satan_max_power = 1200;
+            //サタンの攻撃力
+            satan_power = 1000;
+            //サタンの防御力
+            satan_shield = 200;
+            //サタンの最大奥義
+            satan_max_skill = 2000;
+            //サタンの奥義
+            satan_skill = 1500;
+        }
+    }
+
+    public Satan_Enemy_STATUS ses = new Satan_Enemy_STATUS();
+
+    public void Satan_Hp_Bar()
+    {
+        satan_hp_bar.value = ses.satan_hp;
+    }
+
+    private void Satan_Attack_System()
+    {
+       //ダメージカットの状態はサタンの攻撃力と魔法力は半分になる
+        if (cbam.GetComponent<Characters_Battle_Ability_Manager>().nene_ability_3_judge == true)
+        {
+            //サタンの最大攻撃力
+            ses.satan_max_power = 600;
+            //サタンの攻撃力
+            ses.satan_power = 500;
+            //サタンの最大奥義
+            ses.satan_max_skill = 1000;
+            //サタンの奥義
+            ses.satan_skill = 750;
+
+        }//*/
+
+
+        //もしサタンが攻撃をしていない状態であれば
+        if (satan_attack_judge == false)
+        {
+
+            //誰に攻撃するかランダムで決定
+            random_attack_choice = Random.Range((int)ATTACK_SATAN.SHION, (int)ATTACK_SATAN.CHOICE_JUDGE_MAX);
+            //ダメージを与える数値をランダム
+            random_damage_satan = Random.Range(ses.satan_power, ses.satan_max_power);
+            //大魔法の数値を格納
+            random_damage_satan_magic[0] = Random.Range(ses.satan_skill, ses.satan_max_skill);
+            random_damage_satan_magic[1] = Random.Range(ses.satan_skill, ses.satan_max_skill);
+            random_damage_satan_magic[2] = Random.Range(ses.satan_skill, ses.satan_max_skill);
+            random_damage_satan_magic[3] = Random.Range(ses.satan_skill, ses.satan_max_skill);
+
+            //アビリティーを使う判定
+            poison_claws = Random.Range(0, 10);
+            //毒状態にする判定
+            poison_judge = Random.Range(0,5);
+
+        }
+
+            //シオン攻撃する処理
+            if (satan_ability_attack_judge == false && random_attack_choice == (int)ATTACK_SATAN.SHION && satan_attack_judge == true && satan_charge != 3 )
+            {
+                //攻撃エフェクトを表示
+                satan_attack_shion_image.gameObject.SetActive(true);
+                //攻撃エフェクト再生カウント
+                satan_attack_interval++;
+                //ダメージテキストを表示
+                satan_attack_shion_damage_text.gameObject.SetActive(true);
+
+                //効果音再生
+                if (satan_attack_music_judge == false)
+                {
+                    audio_player.PlayOneShot(satan_normal_attack_music);
+                    //効果音一度だけ再生
+                    satan_attack_music_judge = true;
+                }
+
+                //1秒後エフェクトを非表示とダメージを与える
+                if (satan_attack_interval >= 60)
+                {
+                    //攻撃エフェクトを非表示
+                    satan_attack_shion_image.gameObject.SetActive(false);
+                    //テキストに攻撃数値を書き込む
+                    satan_attack_shion_damage_text.text = random_damage_satan.ToString();
+                    //0.5秒後テキストを非表示
+                    if (satan_attack_interval >= 90)
+                    {
+
+                    //体力を減らす
+                    cs.ss.shion_hp -= random_damage_satan;
+                    //チャージを1貯める
+                    satan_charge += 1;
+                    //テキストに攻撃数値を書き込む
+                    satan_attack_shion_damage_text.text = "".ToString();
+                    //ダメージテキストを非表示
+                    satan_attack_shion_damage_text.gameObject.SetActive(false);
+                    //攻撃間隔を戻す
+                    satan_attack_interval = 0;
+                    //効果音を再度鳴らす準備をする再生
+                    satan_attack_music_judge = false;
+                    //ダメージカットの状態はサタンの攻撃力と魔法力は半分になる
+                    if (cbam.GetComponent<Characters_Battle_Ability_Manager>().nene_ability_3_judge == true)
+                    {
+                        cbam.GetComponent<Characters_Battle_Ability_Manager>().nene_ability_3_judge = false;
+
+                    }
+                    //攻撃後確率でアビリティを使用
+                    if (poison_claws > 5)
+                        {
+                            satan_ability_attack_judge = true;
+                        }
+                        else
+                        {
+                            //サタンを攻撃していない状態へと戻す
+                            satan_attack_judge = false;
+                            //攻撃開始ボタンを表示
+                            attack_stsart_button.gameObject.SetActive(true);
+                            //サタンを攻撃していない状態へと戻す
+                            satan_attack_judge = false;
+                    }
+                    }
+                }
+            }
+
+            //マインに攻撃する処理
+            if (satan_ability_attack_judge == false && random_attack_choice == (int)ATTACK_SATAN.MAIN && satan_attack_judge == true && satan_charge != 3 && cbam.GetComponent<Characters_Battle_Ability_Manager>().character_use_ability_judge == false)
+            {
+                //攻撃エフェクトを表示
+                satan_attack_main_image.gameObject.SetActive(true);
+                //攻撃エフェクト再生カウント
+                satan_attack_interval++;
+                //ダメージテキストを表示
+                satan_attack_main_damage_text.gameObject.SetActive(true);
+
+                //効果音再生
+                if (satan_attack_music_judge == false)
+                {
+                    audio_player.PlayOneShot(satan_normal_attack_music);
+                    //効果音一度だけ再生
+                    satan_attack_music_judge = true;
+                }
+
+                //1秒後エフェクトを非表示とダメージを与える
+                if (satan_attack_interval >= 60)
+                {
+                    //攻撃エフェクトを非表示
+                    satan_attack_main_image.gameObject.SetActive(false);
+                    //テキストに攻撃数値を書き込む
+                    satan_attack_main_damage_text.text = random_damage_satan.ToString();
+                    //0.5秒後テキストを非表示
+                    if (satan_attack_interval >= 90)
+                    {
+                    //体力を減らす
+                    cs.ms.main_hp -= random_damage_satan;
+                    //チャージを1貯める
+                    satan_charge += 1;
+                    //テキストに攻撃数値を書き込む
+                    satan_attack_main_damage_text.text = "".ToString();
+                    //ダメージテキストを非表示
+                    satan_attack_main_damage_text.gameObject.SetActive(false);
+                    //攻撃間隔を戻す
+                    satan_attack_interval = 0;
+                    //効果音を再度鳴らす準備をする再生
+                    satan_attack_music_judge = false;
+                    //ダメージカットの状態はサタンの攻撃力と魔法力は半分になる
+                    if (cbam.GetComponent<Characters_Battle_Ability_Manager>().nene_ability_3_judge == true)
+                    {
+                        cbam.GetComponent<Characters_Battle_Ability_Manager>().nene_ability_3_judge = false;
+
+                    }
+                    //攻撃後確率でアビリティを使用
+                    if (poison_claws > 5)
+                        {
+                            satan_ability_attack_judge = true;
+                        }
+                        else
+                        {
+                            //攻撃開始ボタンを表示
+                            attack_stsart_button.gameObject.SetActive(true);
+                            //サタンを攻撃していない状態へと戻す
+                            satan_attack_judge = false;
+                        }
+                    }
+
+                }
+            }
+
+            //ガイア攻撃する処理
+            if (satan_ability_attack_judge == false && random_attack_choice == (int)ATTACK_SATAN.GAIA && satan_attack_judge == true && satan_charge != 3 && cbam.GetComponent<Characters_Battle_Ability_Manager>().character_use_ability_judge == false)
+            {
+                //攻撃エフェクトを表示
+                satan_attack_gaia_image.gameObject.SetActive(true);
+                //攻撃エフェクト再生カウント
+                satan_attack_interval++;
+                //ダメージテキストを表示
+                satan_attack_gaia_damage_text.gameObject.SetActive(true);
+
+                //効果音再生
+                if (satan_attack_music_judge == false)
+                {
+                    audio_player.PlayOneShot(satan_normal_attack_music);
+                    //効果音一度だけ再生
+                    satan_attack_music_judge = true;
+                }
+
+                //1秒後エフェクトを非表示とダメージを与える
+                if (satan_attack_interval >= 60)
+                {
+                    //攻撃エフェクトを非表示
+                    satan_attack_gaia_image.gameObject.SetActive(false);
+                    //テキストに攻撃数値を書き込む
+                    satan_attack_gaia_damage_text.text = random_damage_satan.ToString();
+                    //0.5秒後テキストを非表示
+                    if (satan_attack_interval >= 90)
+                    {
+
+                    //体力を減らす
+                    cs.gs.gaia_hp -= random_damage_satan;
+                    //チャージを1貯める
+                    satan_charge += 1;
+                    //テキストに攻撃数値を書き込む
+                    satan_attack_gaia_damage_text.text = "".ToString();
+                    //ダメージテキストを非表示
+                    satan_attack_gaia_damage_text.gameObject.SetActive(false);
+                    //攻撃間隔を戻す
+                    satan_attack_interval = 0;
+                    //効果音を再度鳴らす準備をする再生
+                    satan_attack_music_judge = false;
+                    //ダメージカットの状態はサタンの攻撃力と魔法力は半分になる
+                    if (cbam.GetComponent<Characters_Battle_Ability_Manager>().nene_ability_3_judge == true)
+                    {
+                        cbam.GetComponent<Characters_Battle_Ability_Manager>().nene_ability_3_judge = false;
+
+                    }
+                    //攻撃後確率でアビリティを使用
+                    if (poison_claws > 5)
+                        {
+                            satan_ability_attack_judge = true;
+                        }
+                        else
+                        {
+                            //攻撃開始ボタンを表示
+                            attack_stsart_button.gameObject.SetActive(true);
+                            //サタンを攻撃していない状態へと戻す
+                            satan_attack_judge = false;
+                        //サタンを攻撃していない状態へと戻す
+                        satan_attack_judge = false;
+                    }
+
+                    }
+
+                }
+            }
+
+            //ネネに攻撃する処理
+            if (satan_ability_attack_judge == false && random_attack_choice == (int)ATTACK_SATAN.NENE && satan_attack_judge == true && satan_charge != 3 && cbam.GetComponent<Characters_Battle_Ability_Manager>().character_use_ability_judge == false)
+            {
+                //攻撃エフェクトを表示
+                satan_attack_nene_image.gameObject.SetActive(true);
+                //攻撃エフェクト再生カウント
+                satan_attack_interval++;
+                //ダメージテキストを表示
+                satan_attack_nene_damage_text.gameObject.SetActive(true);
+
+                //効果音再生
+                if (satan_attack_music_judge == false)
+                {
+                    audio_player.PlayOneShot(satan_normal_attack_music);
+                    //効果音一度だけ再生
+                    satan_attack_music_judge = true;
+                }
+
+                //1秒後エフェクトを非表示とダメージを与える
+                if (satan_attack_interval >= 60)
+                {
+                    //攻撃エフェクトを非表示
+                    satan_attack_nene_image.gameObject.SetActive(false);
+                    //テキストに攻撃数値を書き込む
+                    satan_attack_nene_damage_text.text = random_damage_satan.ToString();
+                    //0.5秒後テキストを非表示
+                    if (satan_attack_interval >= 90)
+                    {
+                        //体力を減らす
+                        cs.ns.nene_hp -= random_damage_satan;
+                        //チャージを1貯める
+                        satan_charge += 1;
+                        //テキストに攻撃数値を書き込む
+                        satan_attack_nene_damage_text.text = "".ToString();
+                        //ダメージテキストを非表示
+                        satan_attack_nene_damage_text.gameObject.SetActive(false);
+                        //攻撃間隔を戻す
+                        satan_attack_interval = 0;
+                        //効果音を再度鳴らす準備をする再生
+                        satan_attack_music_judge = false;
+                    //ダメージカットの状態はサタンの攻撃力と魔法力は半分になる
+                    if (cbam.GetComponent<Characters_Battle_Ability_Manager>().nene_ability_3_judge == true)
+                    {
+                        cbam.GetComponent<Characters_Battle_Ability_Manager>().nene_ability_3_judge = false;
+                    }
+                    //攻撃後確率でアビリティを使用
+                    if (poison_claws > 5)
+                        {
+                            satan_ability_attack_judge = true;
+                        }
+                        else
+                        {
+                            //攻撃開始ボタンを表示
+                            attack_stsart_button.gameObject.SetActive(true);
+                            //サタンを攻撃していない状態へと戻す
+                            satan_attack_judge = false;
+                        //サタンを攻撃していない状態へと戻す
+                        satan_attack_judge = false;
+                    }
+                    }
+                }
+
+            }
+            
+            //アビリティ攻撃処理///////////////////////
+            //シオン攻撃する処理
+            if (satan_ability_attack_judge == true && poison_claws == 6)
+            {
+                satan_attack_shion_image.color = new Color(0 / 255, 255 / 255, 0 / 255);
+                //攻撃エフェクトを表示
+                satan_attack_shion_image.gameObject.SetActive(true);
+                //攻撃エフェクト再生カウント
+                satan_attack_interval++;
+                //ダメージテキストを表示
+                satan_attack_shion_damage_text.gameObject.SetActive(true);
+
+                //効果音再生
+                if (satan_attack_music_judge == false)
+                {
+                    audio_player.PlayOneShot(satan_normal_attack_music);
+                    //効果音一度だけ再生
+                    satan_attack_music_judge = true;
+                }
+
+                //1秒後エフェクトを非表示とダメージを与える
+                if (satan_attack_interval >= 60)
+                {
+                    //攻撃エフェクトを非表示
+                    satan_attack_shion_image.gameObject.SetActive(false);
+                    //テキストに攻撃数値を書き込む
+                    satan_attack_shion_damage_text.text = random_damage_satan.ToString();
+                    //0.5秒後テキストを非表示
+                    if (satan_attack_interval >= 90)
+                    {
+                     satan_attack_shion_image.color = new Color(255 / 255, 255 / 255, 255 / 255);
+                     //体力を減らす
+                     cs.ss.shion_hp -= random_damage_satan;
+                     //テキストに攻撃数値を書き込む
+                     satan_attack_shion_damage_text.text = "".ToString();
+                     //ダメージテキストを非表示
+                     satan_attack_shion_damage_text.gameObject.SetActive(false);
+                     //攻撃間隔を戻す
+                     satan_attack_interval = 0;
+                     //効果音を再度鳴らす準備をする再生
+                     satan_attack_music_judge = false;
+                     //攻撃開始ボタンを表示
+                     attack_stsart_button.gameObject.SetActive(true);
+                     //サタンを攻撃していない状態へと戻す
+                     satan_ability_attack_judge = false;
+                     //サタンを攻撃していない状態へと戻す
+                     satan_attack_judge = false;
+                    //確率でシオンを毒状態にする
+                    if(csdm.GetComponent<Character_Status_Display_Manager>().status_poison_judge[(int)ATTACK_SATAN.SHION] == false && poison_judge > 1)
+                    {
+                        //シオンを毒状態にする
+                        csdm.GetComponent<Character_Status_Display_Manager>().status_poison_judge[(int)ATTACK_SATAN.SHION] = true;
+                    }
+                        
+                    }
+
+                }
+            }
+
+            /////////////////
+            //マインに攻撃する処理
+            if (satan_ability_attack_judge == true && poison_claws == 7)
+            {
+                satan_attack_main_image.color = new Color(0 / 255, 255 / 255, 0 / 255);
+                //攻撃エフェクトを表示
+                satan_attack_main_image.gameObject.SetActive(true);
+                //攻撃エフェクト再生カウント
+                satan_attack_interval++;
+                //ダメージテキストを表示
+                satan_attack_main_damage_text.gameObject.SetActive(true);
+
+                //効果音再生
+                if (satan_attack_music_judge == false)
+                {
+                    audio_player.PlayOneShot(satan_normal_attack_music);
+                    //効果音一度だけ再生
+                    satan_attack_music_judge = true;
+                }
+
+                //1秒後エフェクトを非表示とダメージを与える
+                if (satan_attack_interval >= 60)
+                {
+                    satan_attack_main_image.color = new Color(255 / 255, 255 / 255, 255 / 255);
+                    //攻撃エフェクトを非表示
+                    satan_attack_main_image.gameObject.SetActive(false);
+                    //テキストに攻撃数値を書き込む
+                    satan_attack_main_damage_text.text = random_damage_satan.ToString();
+                    //0.5秒後テキストを非表示
+                    if (satan_attack_interval >= 90)
+                    {
+                    //体力を減らす
+                    cs.ms.main_hp -= random_damage_satan;
+
+                    //テキストに攻撃数値を書き込む
+                    satan_attack_main_damage_text.text = "".ToString();
+                    //ダメージテキストを非表示
+                    satan_attack_main_damage_text.gameObject.SetActive(false);
+                    //攻撃間隔を戻す
+                    satan_attack_interval = 0;
+                    //効果音を再度鳴らす準備をする再生
+                    satan_attack_music_judge = false;
+
+                    //攻撃開始ボタンを表示
+                    attack_stsart_button.gameObject.SetActive(true);
+                    //サタンを攻撃していない状態へと戻す
+                    satan_attack_judge = false;
+                    //サタンを攻撃していない状態へと戻す
+                    satan_ability_attack_judge = false;
+
+                    satan_attack_turn = false;
+                    //確率でマインを毒状態にする
+                    if (csdm.GetComponent<Character_Status_Display_Manager>().status_poison_judge[(int)ATTACK_SATAN.MAIN] == false && poison_judge > 1)
+                    {
+                        //マインを毒状態にする
+                        csdm.GetComponent<Character_Status_Display_Manager>().status_poison_judge[(int)ATTACK_SATAN.MAIN] = true;
+                    }
+                }
+
+                }
+            }
+
+            /////////////
+            //ガイア攻撃する処理
+            if (satan_ability_attack_judge == true && poison_claws == 8)
+            {
+                satan_attack_gaia_image.color = new Color(0 / 255, 255 / 255, 0 / 255);
+                //攻撃エフェクトを表示
+                satan_attack_gaia_image.gameObject.SetActive(true);
+                //攻撃エフェクト再生カウント
+                satan_attack_interval++;
+                //ダメージテキストを表示
+                satan_attack_gaia_damage_text.gameObject.SetActive(true);
+
+                //効果音再生
+                if (satan_attack_music_judge == false)
+                {
+                    audio_player.PlayOneShot(satan_normal_attack_music);
+                    //効果音一度だけ再生
+                    satan_attack_music_judge = true;
+                }
+
+                //1秒後エフェクトを非表示とダメージを与える
+                if (satan_attack_interval >= 60)
+                {
+                    //攻撃エフェクトを非表示
+                    satan_attack_gaia_image.gameObject.SetActive(false);
+                    //テキストに攻撃数値を書き込む
+                    satan_attack_gaia_damage_text.text = random_damage_satan.ToString();
+                    //0.5秒後テキストを非表示
+                    if (satan_attack_interval >= 90)
+                    {
+                        satan_attack_gaia_image.color = new Color(255 / 255, 255 / 255, 255 / 255);
+                        //体力を減らす
+                        cs.gs.gaia_hp -= random_damage_satan;
+                        //テキストに攻撃数値を書き込む
+                        satan_attack_gaia_damage_text.text = "".ToString();
+                        //ダメージテキストを非表示
+                        satan_attack_gaia_damage_text.gameObject.SetActive(false);
+                        //攻撃間隔を戻す
+                        satan_attack_interval = 0;
+                        //効果音を再度鳴らす準備をする再生
+                        satan_attack_music_judge = false;
+
+
+                        //攻撃開始ボタンを表示
+                        attack_stsart_button.gameObject.SetActive(true);
+                        //サタンを攻撃していない状態へと戻す
+                        satan_attack_judge = false;
+                        //
+                        satan_ability_attack_judge = false;
+                    //確率でガイアを毒状態にする
+                    if (csdm.GetComponent<Character_Status_Display_Manager>().status_poison_judge[(int)ATTACK_SATAN.GAIA] == false && poison_judge > 1)
+                    {
+                        //ガイアを毒状態にする
+                        csdm.GetComponent<Character_Status_Display_Manager>().status_poison_judge[(int)ATTACK_SATAN.GAIA] = true;
+                    }
+
+                }
+
+                }
+            }
+
+
+            //ネネに攻撃する処理
+            if (satan_ability_attack_judge == true && poison_claws == 9)
+            {
+                satan_attack_nene_image.color = new Color(0 / 255, 255 / 255, 0 / 255);
+                //攻撃エフェクトを表示
+                satan_attack_nene_image.gameObject.SetActive(true);
+                //攻撃エフェクト再生カウント
+                satan_attack_interval++;
+                //ダメージテキストを表示
+                satan_attack_nene_damage_text.gameObject.SetActive(true);
+
+                //効果音再生
+                if (satan_attack_music_judge == false)
+                {
+                    audio_player.PlayOneShot(satan_normal_attack_music);
+                    //効果音一度だけ再生
+                    satan_attack_music_judge = true;
+                }
+
+                //1秒後エフェクトを非表示とダメージを与える
+                if (satan_attack_interval >= 60)
+                {
+                    //攻撃エフェクトを非表示
+                    satan_attack_nene_image.gameObject.SetActive(false);
+                    //テキストに攻撃数値を書き込む
+                    satan_attack_nene_damage_text.text = random_damage_satan.ToString();
+                    //0.5秒後テキストを非表示
+                    if (satan_attack_interval >= 90)
+                    {
+                        //体力を減らす
+                        cs.ns.nene_hp -= random_damage_satan;
+                        satan_attack_nene_image.color = new Color(255 / 255, 255 / 255, 255 / 255);
+                        //テキストに攻撃数値を書き込む
+                        satan_attack_nene_damage_text.text = "".ToString();
+                        //ダメージテキストを非表示
+                        satan_attack_nene_damage_text.gameObject.SetActive(false);
+                        //攻撃間隔を戻す
+                        satan_attack_interval = 0;
+                        //効果音を再度鳴らす準備をする再生
+                        satan_attack_music_judge = false;
+
+                        //攻撃開始ボタンを表示
+                        attack_stsart_button.gameObject.SetActive(true);
+                        //サタンを攻撃していない状態へと戻す
+                        satan_attack_judge = false;
+                        //
+                        satan_ability_attack_judge = false;
+                        satan_attack_turn = false;
+                    //確率でネネを毒状態にする
+                    if (csdm.GetComponent<Character_Status_Display_Manager>().status_poison_judge[(int)ATTACK_SATAN.NENE] == false && poison_judge > 1)
+                    {
+                        //ネネを毒状態にする
+                        csdm.GetComponent<Character_Status_Display_Manager>().status_poison_judge[(int)ATTACK_SATAN.NENE] = true;
+                    }
+                }
+                }
+            }
+
+            
+            //サタンのチャージが最大の時に大魔法を唱える
+            if (satan_attack_judge == true && satan_charge == 3 && big_magic_judge == false && satan_ability_attack_judge == false)
+            {
+                //第魔法を唱える状態判定
+                big_magic_judge = true;
+                //魔法アニメーション
+                satan_attack_all_character_image.gameObject.SetActive(true);
+                //効果音1を一度だけ再生
+                if (satan_big_magic_music_judge1 == false)
+                {
+                    //効果音
+                    audio_player.PlayOneShot(satan_big_magic_music1);
+                    //判定を変える
+                    satan_big_magic_music_judge1 = true;
+                }
+            }
+
+            if (big_magic_judge == true)
+            {
+                //唱えている状態カウント
+                big_magic_count++;
+            }
+
+            if (big_magic_count >= 50)
+            {
+                //サタンが攻撃した判定
+                satan_attack_judge = true;
+            }
+
+            if (big_magic_count >= 75 && big_magic_count <= 150)
+            {
+
+                //効果音2を一度だけ再生
+                if (satan_big_magic_music_judge2 == false)
+                {
+                    //効果音
+                    audio_player.PlayOneShot(satan_big_magic_music2);
+                    //判定を変える
+                    satan_big_magic_music_judge2 = true;
+                }
+
+                //一定の時間経過でテキストを表示
+                if (big_magic_count >= 90 && big_magic_count <= 105)
+                {
+                //ダメージテキストを表示
+                satan_attack_shion_damage_text.gameObject.SetActive(true);
+                //テキストに攻撃数値を書き込む
+                satan_attack_shion_damage_text.text = random_damage_satan_magic[0].ToString();
+
+                }
+            //一定の時間経過でテキストを表示
+            if (big_magic_count >= 105 && big_magic_count <= 120)
+            {
+                //ダメージテキストを表示
+                satan_attack_main_damage_text.gameObject.SetActive(true);
+                //テキストに攻撃数値を書き込む
+                satan_attack_main_damage_text.text = random_damage_satan_magic[1].ToString();
+
+            }
+
+            //一定の時間経過でテキストを表示
+            if (big_magic_count >= 120 && big_magic_count <= 135)
+            {
+                //ダメージテキストを表示
+                satan_attack_gaia_damage_text.gameObject.SetActive(true);
+                //テキストに攻撃数値を書き込む
+                satan_attack_gaia_damage_text.text = random_damage_satan_magic[2].ToString();
+
+            }
+
+            //一定の時間経過でテキストを表示
+            if (big_magic_count >= 135 && big_magic_count <= 150)
+            {
+                //ダメージテキストを表示
+                satan_attack_nene_damage_text.gameObject.SetActive(true);
+                //テキストに攻撃数値を書き込む
+                satan_attack_nene_damage_text.text = random_damage_satan_magic[3].ToString();
+
+            }
+            
+            }
+
+        //一定の時間経過でテキストを表示
+        if (big_magic_count >= 150)
+        {
+            //ダメージテキストを表示
+            satan_attack_shion_damage_text.gameObject.SetActive(false);
+            //テキストに攻撃数値を書き込む
+            satan_attack_shion_damage_text.text = "";
+
+        }
+
+        //一定の時間経過でテキストを表示
+        if (big_magic_count >= 165)
+        {
+            //ダメージテキストを表示
+            satan_attack_main_damage_text.gameObject.SetActive(false);
+            //テキストに攻撃数値を書き込む
+            satan_attack_main_damage_text.text = "";
+        }
+
+        //一定の時間経過でテキストを表示
+        if (big_magic_count >= 180)
+        {
+            //ダメージテキストを表示
+            satan_attack_gaia_damage_text.gameObject.SetActive(false);
+            //テキストに攻撃数値を書き込む
+            satan_attack_gaia_damage_text.text = "";
+
+        }
+
+        //一定の時間経過でテキストを表示
+        if (big_magic_count >= 195)
+        {
+            //ダメージテキストを表示
+            satan_attack_nene_damage_text.gameObject.SetActive(false);
+            //テキストに攻撃数値を書き込む
+            satan_attack_nene_damage_text.text = "";
+
+        }
+
+
+
+        if (big_magic_count >= 210)
+            {
+                //第魔法を唱える状態判定
+                big_magic_judge = false;
+                //魔法アニメーション
+                satan_attack_all_character_image.gameObject.SetActive(false);
+                
+                //チャージを戻す
+                satan_charge = 0;
+                //大魔法を唱えるカウントを戻す
+                big_magic_count = 0;
+                //判定を変える
+                satan_big_magic_music_judge1 = false;
+                //判定を変える
+                satan_big_magic_music_judge2 = false;
+                //攻撃開始ボタンを表示
+                attack_stsart_button.gameObject.SetActive(true);
+                //サタンが攻撃した判定
+                satan_attack_judge = false;
+            }
+        
+    }
+    
+    private void Satan_Charge_System()
+    {
+        //一度行動するたびにチャージ画像を表示する
+        if (satan_charge >= 1)
+        {
+            charge_image[0].gameObject.SetActive(true);
+        }
+        else
+        {
+            charge_image[0].gameObject.SetActive(false);
+        }
+
+        if (satan_charge >= 2)
+        {
+            charge_image[1].gameObject.SetActive(true);
+        }
+        else
+        {
+            charge_image[1].gameObject.SetActive(false);
+        }
+
+        if (satan_charge >= 3)
+        {
+            charge_image[2].gameObject.SetActive(true);
+        }
+        else
+        {
+            charge_image[2].gameObject.SetActive(false);
+        }
+
+        //チャージが0の状態
+        if (satan_charge == 0)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                charge_image[i].gameObject.SetActive(false);
+            }
+        }
+    }
+
+
+
+
+    
+	// Use this for initialization
+	void Start () {
+        satan_hp_bar.value = ses.satan_max_hp;
+	}
+	
+	// Update is called once per frame
+	void Update () {
+        
+            Satan_Hp_Bar();
+            Satan_Attack_System();
+            Satan_Charge_System();
+        
+    }
+}
