@@ -1,0 +1,96 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using System.Text;
+using System;
+using System.IO;
+
+public class sample : MonoBehaviour {
+
+
+
+    string player_information;
+
+    StreamWriter sw;
+    FileInfo fi;
+
+    [Header("キャラクターの情報スクリプト")]
+    [SerializeField]
+    Character_Status cs;
+
+    string shion_lv = "100";
+
+    int a = 1001;
+
+    public void Shion_Save()
+    {
+
+        //テキストデータを呼び出す。なければ新規で作る
+        fi = new FileInfo(Application.dataPath + "/Resources/FileName.txt");
+        //テキストデータの情報を呼び出す
+        sw = fi.AppendText();
+        //テキストデータに書き込む内容
+        sw.WriteLine(shion_lv);
+        sw.WriteLine("現在のシオンの最大体力は"+ cs.GetComponent<Character_Status>().ss.shion_max_hp);//シオンの最大HP     
+        sw.WriteLine("現在のシオンの体力は"+ cs.GetComponent<Character_Status>().ss.shion_hp);//シオンのHP
+        sw.WriteLine("現在のシオンの最大魔力は"+ cs.GetComponent<Character_Status>().ss.shion_max_mp);//シオンの最大MP
+        sw.WriteLine("現在のシオンの魔力は"+ cs.GetComponent<Character_Status>().ss.shion_mp);//シオンのMP
+        sw.WriteLine("現在のシオンの最大攻撃力は"+ cs.GetComponent<Character_Status>().ss.shion_max_power);//シオンの最大攻撃力
+        sw.WriteLine("現在のシオンの攻撃力は"+ cs.GetComponent<Character_Status>().ss.shion_power);//シオンの攻撃力
+        sw.WriteLine("現在のシオンの最大技威力は"+ cs.GetComponent<Character_Status>().ss.shion_max_skill);//シオンの最大技威力
+        sw.WriteLine("現在のシオンの技威力は" + cs.GetComponent<Character_Status>().ss.shion_skill);//シオンの技威力
+
+        //テキストデータに書き込む
+        player_information = sw.ToString();
+        //
+        sw.Flush();
+        //書き込みの終了
+        sw.Close();
+        
+    }
+
+    //テキストデータを読み込む
+    [SerializeField]
+    TextAsset loadtext;
+
+    //文字列を格納する
+    string load_string_text;
+    //テキストデータの文字列の格納
+    string[] display;
+    //数値化した文字列の格納変数
+    int c;
+
+    // Use this for initialization
+    void Start () {
+
+        load_string_text = loadtext.text;
+
+        display = load_string_text.Split(char.Parse("\n"));
+
+         c = int.Parse(display[0]);
+        
+    }
+	
+	// Update is called once per frame
+	void Update () {
+
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            Shion_Save();
+            
+        }
+
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+            //ファイルを消す
+            File.Delete(Application.dataPath + "/Resources/FileName.txt");
+        }
+
+        if (a == c)
+        {
+            print("同じ値です");
+        }
+
+
+    }
+}
