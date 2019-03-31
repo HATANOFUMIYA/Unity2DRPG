@@ -1,0 +1,264 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Character_Status : MonoBehaviour {
+
+    public class SHION_STATUS
+    {
+        //シオンのレベル
+        public int shion_lv;
+
+        //シオンの最大HP
+        public float shion_max_hp;
+        //シオンのHP
+        public float shion_hp;
+
+        //シオンの最大MP
+        public int shion_max_mp;
+        //シオンのMP
+        public int shion_mp;
+
+        //シオンの最大攻撃力
+        public int shion_max_power;
+        //シオンの攻撃力
+        public int shion_power;
+
+
+        //シオンの最大技威力
+        public int shion_max_skill;
+        //シオンのMP
+        public int shion_skill;
+
+        //戦闘不能状態かどうかの判定
+        public bool shion_dead_judge;
+        
+        //コンストラクター
+        public SHION_STATUS()
+        {
+            //初期ステータス
+            //シオンのレベル
+            shion_lv = 1;
+            //シオンの最大HP
+            shion_max_hp = 300;
+            //シオンのHP
+            shion_hp = 300;
+            //シオンの最大MP
+            shion_max_mp = 100;
+            //シオンのMP
+            shion_mp = 100;
+            //シオンの最大攻撃力
+            shion_max_power = 120;
+            //シオンの攻撃力
+            shion_power = 80;
+            //シオンの最大技威力
+            shion_max_skill = 150;
+            //シオンの技威力
+            shion_skill = 120;
+            //戦闘不能状態かどうかの判定 false:死んでいない true:死んでいる
+            shion_dead_judge = false;
+        }
+    }
+
+    //ヒョウステータスのクラスのインスタンス化
+    public SHION_STATUS ss = new SHION_STATUS();
+
+    public class MAIN_STATUS
+    {
+        //マインのレベル
+        public int main_lv;
+
+        //マインの最大HP
+        public float main_max_hp;
+        //マインのHP
+        public float main_hp;
+
+        //マインの最大MP
+        public int main_max_mp;
+        //マインのMP
+        public int main_mp;
+
+        //マインの最大攻撃力
+        public int main_max_power;
+        //マインの攻撃力
+        public int main_power;
+
+
+
+        //マインの最大技威力
+        public int main_max_skill;
+        //マインのMP
+        public int main_skill;
+
+        //戦闘不能状態かどうかの判定
+        public bool main_dead_judge;
+
+        //コンストラクター
+        public MAIN_STATUS()
+        {
+            //初期ステータス
+            //マインのレベル
+            main_lv = 1;
+            //マインの最大HP
+            main_max_hp = 280;
+            //マインのHP
+            main_hp = 280;
+
+            //マインの最大MP
+            main_max_mp = 100;
+            //マインのMP
+            main_mp = 100;
+
+            //マインの最大攻撃力
+            main_max_power = 100;
+            //マインの攻撃力
+            main_power = 80;
+
+            //マインの最大技威力
+            main_max_skill = 130;
+            //マインの技威力
+            main_skill = 110;
+            //戦闘不能状態かどうかの判定 false:死んでいない判定　true:死んでいる判定
+            main_dead_judge = false;
+        }
+    }
+
+    //マインのステータスのクラスのインスタンス化
+    public MAIN_STATUS ms = new MAIN_STATUS();
+
+    public class GAIA_STATUS
+    {
+        //ガイアのレベル
+        public int gaia_lv;
+
+        //ガイアの最大HP
+        public float gaia_max_hp;
+        //ガイアのHP
+        public float gaia_hp;
+
+        //ガイアの最大MP
+        public int gaia_max_mp;
+        //ガイアのMP
+        public int gaia_mp;
+
+        //ガイアの最大攻撃力
+        public int gaia_max_power;
+        //ガイアの攻撃力
+        public int gaia_power;
+
+
+        //ガイアの最大技威力
+        public int gaia_max_skill;
+        //ガイアのMP
+        public int gaia_skill;
+
+        //戦闘不能状態かどうかの判定
+        public bool gaia_dead_judge;
+
+        //コンストラクター
+        public GAIA_STATUS()
+        {
+            //初期ステータス
+            //ガイアのレベル
+            gaia_lv = 1;
+            //ガイアの最大HP
+            gaia_max_hp = 400;
+            //ガイアのHP
+            gaia_hp = 400;
+
+            //ガイアの最大MP
+            gaia_max_mp = 130;
+            //ガイアのMP
+            gaia_mp = 130;
+
+            //ガイアの最大攻撃力
+            gaia_max_power = 100;
+            //ガイアの攻撃力
+            gaia_power = 80;
+
+            //ガイアの最大技威力
+            gaia_max_skill = 130;
+            //ガイアの技威力
+            gaia_skill = 110;
+
+            //戦闘不能状態かどうかの判定
+            gaia_dead_judge = false;
+    }
+    }
+
+    //ガイアのステータスのクラスのインスタンス化
+    public GAIA_STATUS gs = new GAIA_STATUS();
+
+    public class NENE_STATUS
+    {
+        //ネネのレベル
+        public int nene_lv;
+
+        //ネネの最大HP
+        public float nene_max_hp;
+        //ネネのHP
+        public float nene_hp;
+
+        //ネネの最大MP
+        public int nene_max_mp;
+        //ネネのMP
+        public int nene_mp;
+
+        //ネネの最大攻撃力
+        public int nene_max_power;
+        //ネネの攻撃力
+        public int nene_power;
+
+
+        //ネネの最大技威力
+        public int nene_max_skill;
+        //ネネのMP
+        public int nene_skill;
+
+        //戦闘不能状態かどうかの判定
+        public bool nene_dead_judge;
+
+        //コンストラクター
+        public NENE_STATUS()
+        {
+            //初期ステータス
+            //ネネのレベル
+            nene_lv = 1;
+            //ネネの最大HP
+            nene_max_hp = 400;
+            //ネネのHP
+            nene_hp = 400;
+
+            //ネネの最大MP
+            nene_max_mp = 130;
+            //ネネのMP
+            nene_mp = 130;
+
+            //ネネの最大攻撃力
+            nene_max_power = 100;
+            //ネネの攻撃力
+            nene_power = 80;
+
+            //ネネの最大技威力
+            nene_max_skill = 130;
+            //ネネの技威力
+            nene_skill = 110;
+
+            //戦闘不能状態かどうかの判定
+            nene_dead_judge = false;
+        }
+    }
+
+    //ネネのステータスのクラスのインスタンス化
+    public NENE_STATUS ns = new NENE_STATUS();
+
+    // Use this for initialization
+    void Start () {
+		
+	}
+	
+	// Update is called once per frame
+	void Update () {
+
+	}
+}
