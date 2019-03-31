@@ -1,0 +1,979 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class Characters_Battle_Command_Manager : MonoBehaviour {
+
+    [Header("サタンのスクリプト")]
+    [SerializeField]
+    Satan_Script ss;
+
+    [Header("アビリティ説明のスクリプト")]
+    [SerializeField]
+    Character_Ability_Text cat;
+
+    enum CHARACTER_ACTION_JUDGE
+    {
+        ATTACK,
+        SKILL_1,
+        SKILL_2,
+        SKILL_3,
+    }
+
+    //攻撃を受けたキャラ判定
+    enum ATTACK_SATAN_CHOICE
+    {
+        CHARACTER_INFORMATION,
+        SHION,
+        MAIN,
+        GAIA,
+        NENE,
+    }
+
+    [Header("味方キャラクターのステータスを管理しているスクリプト")]
+    [SerializeField]
+    Character_Status cs;
+
+    [Header("攻撃開始ボタン")]
+    [SerializeField]
+    Button attack_stsart_button;
+
+    [Header("シオンテキストの表示")]
+    [SerializeField]
+    Text shion_attack_text;
+
+    [Header("シオンテキストの表示")]
+    [SerializeField]
+    Text shion_recovery_text;
+
+    [Header("マインテキストの表示")]
+    [SerializeField]
+    Text main_attack_text;
+
+    [Header("ガイアテキストの表示")]
+    [SerializeField]
+    Text gaia_attack_text;
+
+    [Header("ネネテキストの表示")]
+    [SerializeField]
+    Text nene_attack_text;
+
+    
+
+    //各キャラクターのテキスト座標
+    float shion_text_x;
+    float shion_text_y;
+
+    float main_text_x;
+    float main_text_y;
+
+    float gaia_text_x;
+    float gaia_text_y;
+
+    float nene_text_x;
+    float nene_text_y;
+
+    //敵に与えるダメージをランダムで決定する
+    int random_shion_damage = 0;
+    //敵に与えるダメージをランダムで決定する
+    int random_main_damage = 0;
+    //敵に与えるダメージをランダムで決定する
+    int random_gaia_damage = 0;
+    //敵に与えるダメージをランダムで決定する
+    int random_nene_damage = 0;
+
+    //アビリティダメージ変数
+
+    [Header("ランダムでテキストを表示する判定")]
+    public bool random_text = false;
+
+    //攻撃ボタンを押したかどうか
+    public bool attack_button_push = false;
+
+    
+    //各キャラクターのアニメーターを呼び出す
+    [Header("シオンの攻撃のアニメーション")]
+    [SerializeField]
+    Animator shion_animation;
+
+    //各キャラクターのアニメーターを呼び出す
+    [Header("マインの攻撃のアニメーション")]
+    [SerializeField]
+    Animator main_animation;
+
+    //各キャラクターのアニメーターを呼び出す
+    [Header("ガイアの攻撃のアニメーション")]
+    [SerializeField]
+    Animator gaia_animation;
+
+    //各キャラクターのアニメーターを呼び出す
+    [Header("ネネの攻撃のアニメーション")]
+    [SerializeField]
+    Animator nene_animation;
+
+    //各キャラクターのエフェクトを呼び出す
+    [Header("シオンの通常攻撃のエフェクト")]
+    [SerializeField]
+    Image shion_normal_attack_effect;
+    
+    //各キャラクターのエフェクトを呼び出す
+    [Header("マインの通常攻撃のエフェクト")]
+    [SerializeField]
+    Image main_normal_attack_effect;
+
+    //各キャラクターのエフェクトを呼び出す
+    [Header("ガイアの通常攻撃のエフェクト")]
+    [SerializeField]
+    Image gaia_normal_attack_effect;
+
+    //各キャラクターのエフェクトを呼び出す
+    [Header("ネネの通常攻撃のエフェクト")]
+    [SerializeField]
+    Image nene_normal_attack_effect;
+
+    //シオンのアビリティエフェクト
+    //各キャラクターのエフェクトを呼び出す
+    [Header("シオンのアビリティ1攻撃のエフェクト")]
+    [SerializeField]
+    Image shion_ability_attack_1_effect;
+
+    [Header("シオンのアビリティ2攻撃のエフェクト")]
+    [SerializeField]
+    Image shion_ability_attack_2_effect;
+
+    [Header("シオンのアビリティ3攻撃のエフェクト")]
+    [SerializeField]
+    Image shion_ability_attack_3_effect;
+
+    //効果音を鳴らす判定 true:鳴らす　false:鳴らさない
+    bool[] attack_music_judge = { false, false, false, false };
+    
+    [Header("オーディオプレイヤー")]
+    [SerializeField]
+    AudioSource audio_player;
+
+    [Header("シオン通常攻撃効果音")]
+    [SerializeField]
+    AudioClip shion_normal_attack;
+
+    [Header("マイン通常攻撃効果音")]
+    [SerializeField]
+    AudioClip main_normal_attack;
+
+    [Header("ガイア通常攻撃効果音")]
+    [SerializeField]
+    AudioClip gaia_normal_attack;
+
+    [Header("ネネ通常攻撃効果音")]
+    [SerializeField]
+    AudioClip nene_normal_attack;
+
+    /// <summary>
+    /// シオンのアビリティ攻撃効果音
+    /// </summary> 
+
+    //どのキャラクターのコマンドを開いているかの判定
+    //シオン true:シオンを選んでいる false:選んでいない
+    public bool shion_choice = false;
+
+    //マイン true:マインを選んでいる false:選んでいない
+    public bool main_choice = false;
+
+    //ガイア true:ガイアを選んでいる false:選んでいない
+    public bool gaia_choice = false;
+
+    //ネネ true:ネネを選んでいる false:選んでいない
+    public bool nene_choice = false;
+
+    [Header("シオンの攻撃判定")]
+    public int shion_action_judge = 0;
+
+    [Header("マインの攻撃判定")]
+    public int main_action_judge = 0;
+
+    [Header("ガイアの攻撃判定")]
+    public int gaia_action_judge = 0;
+
+    [Header("ネネの攻撃判定")]
+    public int nene_action_judge = 0;
+
+    [Header("シオンのバトルコマンド")]
+    [SerializeField]
+    GameObject shion_button_commands;
+
+    [Header("マインのバトルコマンド")]
+    [SerializeField]
+    GameObject main_button_commands;
+
+    [Header("ガイアのバトルコマンド")]
+    [SerializeField]
+    GameObject gaia_button_commands;
+
+    [Header("ネネのバトルコマンド")]
+    [SerializeField]
+    GameObject nene_button_commands;
+
+    [Header("バトルコマンドキャンセル")]
+    [SerializeField]
+    GameObject cancel_button_commands;
+
+    [Header("アビリティを管理するオブジェクト")]
+    [SerializeField]
+    GameObject ability_manager;
+
+    //通常攻撃をしたかどうかの判定
+    bool shion_attacking_judge = false;
+
+    //攻撃中のカウント変数
+    int shion_attacking;
+
+    //通常攻撃をしたかどうかの判定
+    bool main_attacking_judge = false;
+
+    //通常攻撃をしたかどうかの判定
+    bool gaia_attacking_judge = false;
+
+    //攻撃中のカウント変数
+    public int gaia_attacking;
+
+    //通常攻撃をしたかどうかの判定
+    bool nene_attacking_judge = false;
+
+    //攻撃中のカウント変数
+    public int nene_attacking;
+
+    //二番目のキャラクターが攻撃を始めるカウント/////////////
+    public int second_character_attack = 0;
+
+    //3番目のキャラクターが攻撃を始めるカウント/////////////
+    public int thild_character_attack = 0;
+    
+    //4番目のキャラクターが攻撃を始めるカウント/////////////
+    public int forth_character_attack = 0;
+
+    [Header("エスナ選択ボタン")]
+    [SerializeField]
+    Button[] nene_ability_button_1 = new Button[4];
+
+    public int [] nene_choice_ability_1 = { 0,1,2,3};
+
+    //この勝負だけ体力と魔力を多くする
+    private void Fast_Battle_Status()
+    {
+        //シオンのステータス
+        //シオンのHP
+        cs.GetComponent<Character_Status>().ss.shion_max_hp = 3000;
+        cs.GetComponent<Character_Status>().ss.shion_hp = 3000;
+        //シオンのMP
+        cs.GetComponent<Character_Status>().ss.shion_max_mp = 300;
+        cs.GetComponent<Character_Status>().ss.shion_mp = 300;
+
+        //シオンのMP
+        cs.GetComponent<Character_Status>().ss.shion_max_skill = 3500;
+        cs.GetComponent<Character_Status>().ss.shion_skill = 3200;
+
+        //マインのステータス
+        //マインのHP
+        cs.GetComponent<Character_Status>().ms.main_max_hp = 2800;
+        cs.GetComponent<Character_Status>().ms.main_hp = 2800;
+        //マインのMP
+        cs.GetComponent<Character_Status>().ms.main_max_mp = 250;
+        cs.GetComponent<Character_Status>().ms.main_mp = 250;
+
+        //マインのMP
+        cs.GetComponent<Character_Status>().ms.main_max_skill = 3300;
+        cs.GetComponent<Character_Status>().ms.main_skill = 3000;
+
+        //ガイアのステータス
+        //ガイアのHP
+        cs.GetComponent<Character_Status>().gs.gaia_max_hp = 4000;
+        cs.GetComponent<Character_Status>().gs.gaia_hp = 4000;
+        //ガイアのMP
+        cs.GetComponent<Character_Status>().gs.gaia_max_mp = 350;
+        cs.GetComponent<Character_Status>().gs.gaia_mp = 350;
+
+        //ガイアのMP
+        cs.GetComponent<Character_Status>().gs.gaia_max_skill = 4000;
+        cs.GetComponent<Character_Status>().gs.gaia_skill = 3700;
+
+        //ネネのステータス
+        //ネネのHP
+        cs.GetComponent<Character_Status>().ns.nene_max_hp = 2500;
+        cs.GetComponent<Character_Status>().ns.nene_hp = 2500;
+        //ネネのMP
+        cs.GetComponent<Character_Status>().ns.nene_max_mp = 400;
+        cs.GetComponent<Character_Status>().ns.nene_mp = 400;
+
+        //ネネのMP
+        cs.GetComponent<Character_Status>().ns.nene_max_skill = 4000;
+        cs.GetComponent<Character_Status>().ns.nene_skill = 3500;
+
+    }
+    
+    private void Game_Object_SetActive_False()
+    {
+        //シオンの最大攻撃力
+        cs.GetComponent<Character_Status>().ss.shion_max_power = 3000;
+        //シオンの攻撃力
+        cs.GetComponent<Character_Status>().ss.shion_power = 2800;
+        //マインの最大攻撃力
+        cs.GetComponent<Character_Status>().ms.main_max_power = 2800;
+        //マインの攻撃力
+        cs.GetComponent<Character_Status>().ms.main_power = 2500;
+        //ガイアの最大攻撃力
+        cs.GetComponent<Character_Status>().gs.gaia_max_power = 4000;
+        //ガイアの攻撃力
+        cs.GetComponent<Character_Status>().gs.gaia_power = 3200;
+        //ネネの最大攻撃力
+        cs.GetComponent<Character_Status>().ns.nene_max_power = 1500;
+        //ネネの攻撃力
+        cs.GetComponent<Character_Status>().ns.nene_power = 1000;
+
+        //オブジェクトの座標をランダムで設定
+        if (random_text == false)
+        {
+            shion_text_x = Random.Range(400.0f, 500.0f);
+            shion_text_y = Random.Range(650.0f, 660.0f);
+
+            //オブジェクトの座標をランダムで設定
+            main_text_x = Random.Range(400.0f, 500.0f);
+            main_text_y = Random.Range(650.0f, 660.0f);
+
+            //オブジェクトの座標をランダムで設定
+            gaia_text_x = Random.Range(500.0f, 500.0f);
+            gaia_text_y = Random.Range(650.0f, 660.0f);
+
+            //オブジェクトの座標をランダムで設定
+            nene_text_x = Random.Range(400.0f, 500.0f);
+            nene_text_y = Random.Range(650.0f, 660.0f);
+
+            //敵に与えるダメージをランダムで決定する
+            random_shion_damage = Random.Range(cs.GetComponent<Character_Status>().ss.shion_power, cs.GetComponent<Character_Status>().ss.shion_max_power);
+            //敵に与えるダメージをランダムで決定する
+            random_main_damage = Random.Range(cs.GetComponent<Character_Status>().ms.main_power, cs.GetComponent<Character_Status>().ms.main_max_power);
+            //敵に与えるダメージをランダムで決定する
+            random_gaia_damage = Random.Range(cs.GetComponent<Character_Status>().gs.gaia_power, cs.GetComponent<Character_Status>().gs.gaia_max_power);
+            //敵に与えるダメージをランダムで決定する
+            random_nene_damage = Random.Range(cs.GetComponent<Character_Status>().ns.nene_power, cs.GetComponent<Character_Status>().ns.nene_max_power);
+
+            //ランダムで決まった数値を表記する
+            shion_attack_text.text = random_shion_damage.ToString();
+            main_attack_text.text = random_main_damage.ToString();
+            gaia_attack_text.text = random_gaia_damage.ToString();
+            nene_attack_text.text = random_nene_damage.ToString();
+        }
+
+        //テキストをランダムで表示
+        shion_attack_text.transform.position = new Vector2(shion_text_x, shion_text_y);
+        main_attack_text.transform.position = new Vector2(main_text_x, main_text_y);
+        gaia_attack_text.transform.position = new Vector2(gaia_text_x, gaia_text_y);
+        nene_attack_text.transform.position = new Vector2(nene_text_x, nene_text_y);
+    }
+
+    //シオンのボタンを押したらバトルコマンドを解放
+    public void Shion_Button_Push()
+    {
+        if (shion_choice == false && main_choice == false && gaia_choice == false && nene_choice == false && cat.GetComponent<Character_Ability_Text>().character_ability_text[0] == false) {
+            shion_choice = true;
+            //攻撃ボタン
+            attack_stsart_button.gameObject.SetActive(false);
+            //キャンセルボタンの出現
+            cancel_button_commands.gameObject.SetActive(true);
+            //バトルコマンドを解放
+            shion_button_commands.gameObject.SetActive(true);
+            //アビリティを管理するオブジェクト
+            ability_manager.gameObject.SetActive(true);
+        }
+    }
+
+    //マインのボタンを押したらバトルコマンドを解放
+    public void Main_Button_Push()
+    {
+        //ボタン解放の処理
+        if (shion_choice == false && main_choice == false && gaia_choice == false && nene_choice == false && cat.GetComponent<Character_Ability_Text>().character_ability_text[1] == false) {
+            main_choice = true;
+            //キャンセルボタンの出現
+            cancel_button_commands.gameObject.SetActive(true);
+            //バトルコマンドを解放
+            main_button_commands.gameObject.SetActive(true);
+            //攻撃ボタン
+            attack_stsart_button.gameObject.SetActive(false);
+            //アビリティを管理するオブジェクト
+            ability_manager.gameObject.SetActive(true);
+        }
+    }
+
+    //ガイアのボタンを押したらバトルコマンドを解放
+    public void Gaia_Button_Push()
+    {
+        //ボタン解放の処理
+        if (shion_choice == false && main_choice == false && gaia_choice == false && nene_choice == false && cat.GetComponent<Character_Ability_Text>().character_ability_text[2] == false) {
+            gaia_choice = true;
+            //キャンセルボタンの出現
+            cancel_button_commands.gameObject.SetActive(true);
+            //バトルコマンドを解放
+            gaia_button_commands.gameObject.SetActive(true);
+            //攻撃ボタン
+            attack_stsart_button.gameObject.SetActive(false);
+            //アビリティを管理するオブジェクト
+            ability_manager.gameObject.SetActive(true);
+        }
+    }
+
+    //ネネのボタンを押したらバトルコマンドを解放
+    public void Nene_Button_Push()
+    {
+        //ボタン解放の処理
+        if (shion_choice == false && main_choice == false && gaia_choice == false && nene_choice == false && cat.GetComponent<Character_Ability_Text>().character_ability_text[3] == false) {
+            nene_choice = true;
+            //キャンセルボタンの出現
+            cancel_button_commands.gameObject.SetActive(true);
+            //バトルコマンドを解放
+            nene_button_commands.gameObject.SetActive(true);
+            //攻撃ボタン
+            attack_stsart_button.gameObject.SetActive(false);
+            //アビリティを管理するオブジェクト
+            ability_manager.gameObject.SetActive(true);
+        }
+    }
+
+    //キャンセルコマンド
+    public void Command_Cancel()
+    {
+        //もしシオンのバトルコマンドを解放していたらシオンのバトルコマンドを非表示にする
+        if (shion_choice == true) {
+            //バトルコマンドを解放
+            shion_button_commands.gameObject.SetActive(false);
+            //キャンセルボタンの非表示
+            cancel_button_commands.gameObject.SetActive(false);
+            //攻撃ボタン
+            attack_stsart_button.gameObject.SetActive(true);
+            //判定を戻す
+            shion_choice = false;
+            //アビリティを管理するオブジェクト
+            ability_manager.gameObject.SetActive(false);
+        }
+
+        //もしマインのバトルコマンドを解放していたらマインのバトルコマンドを非表示にする
+        if (main_choice == true)
+        {
+            //バトルコマンドを解放
+            main_button_commands.gameObject.SetActive(false);
+            //キャンセルボタンの非表示
+            cancel_button_commands.gameObject.SetActive(false);
+            //攻撃ボタン
+            attack_stsart_button.gameObject.SetActive(true);
+            //判定を戻す
+            main_choice = false;
+            //アビリティを管理するオブジェクト
+            ability_manager.gameObject.SetActive(false);
+        }
+
+        //もしガイアのバトルコマンドを解放していたらガイアのバトルコマンドを非表示にする
+        if (gaia_choice == true)
+        {
+            //バトルコマンドを解放
+            gaia_button_commands.gameObject.SetActive(false);
+            //キャンセルボタンの非表示
+            cancel_button_commands.gameObject.SetActive(false);
+            //攻撃ボタン
+            attack_stsart_button.gameObject.SetActive(true);
+            //判定を戻す
+            gaia_choice = false;
+            //アビリティを管理するオブジェクト
+            ability_manager.gameObject.SetActive(false);
+        }
+
+        //もしネネのバトルコマンドを解放していたらネネのバトルコマンドを非表示にする
+        if (nene_choice == true)
+        {
+            //バトルコマンドを解放
+            nene_button_commands.gameObject.SetActive(false);
+            //キャンセルボタンの非表示
+            cancel_button_commands.gameObject.SetActive(false);
+            //攻撃ボタン
+            attack_stsart_button.gameObject.SetActive(true);
+            //エスナ選択ボタンを全て非表示にする
+            foreach (int i in nene_choice_ability_1)
+            {
+                nene_ability_button_1[i].gameObject.SetActive(false);
+                
+            }
+
+            //判定を戻す
+            nene_choice = false;
+            //アビリティを管理するオブジェクト
+            ability_manager.gameObject.SetActive(false);
+        }
+    }
+
+    //各キャラクターの攻撃選択ボタン
+    public void Attack_Button()
+    {
+
+        //攻撃中は非表示
+        attack_stsart_button.gameObject.SetActive(false);
+        //もしシオンのバトルコマンドの攻撃ボタンをおしていたらシオンが攻撃するようにする
+        if (shion_choice == true)
+        {
+            //シオンが攻撃をする最終確認
+            shion_action_judge = (int)CHARACTER_ACTION_JUDGE.ATTACK;
+            //バトルコマンドを非表示
+            shion_button_commands.gameObject.SetActive(false);
+            //キャンセルボタンの非表示
+            cancel_button_commands.gameObject.SetActive(false);
+            //判定を戻す
+            shion_choice = false;
+        }
+
+        //もしマインのバトルコマンドの攻撃ボタンをおしていたらマインが攻撃するようにする
+        if (main_choice == true)
+        {
+            //マインが攻撃をする最終確認
+            main_action_judge = (int)CHARACTER_ACTION_JUDGE.ATTACK;
+            //バトルコマンドを非表示
+            main_button_commands.gameObject.SetActive(false);
+            //キャンセルボタンの非表示
+            cancel_button_commands.gameObject.SetActive(false);
+            //判定を戻す
+            main_choice = false;
+        }
+
+        //もしガイアのバトルコマンドの攻撃ボタンをおしていたらガイアが攻撃するようにする
+        if (gaia_choice == true)
+        {
+            //ガイアが攻撃をする最終確認
+            gaia_action_judge = (int)CHARACTER_ACTION_JUDGE.ATTACK;
+            //バトルコマンドを非表示
+            gaia_button_commands.gameObject.SetActive(false);
+            //キャンセルボタンの非表示
+            cancel_button_commands.gameObject.SetActive(false);
+            //判定を戻す
+            gaia_choice = false;
+        }
+
+        //もしネネのバトルコマンドの攻撃ボタンをおしていたらネネが攻撃するようにする
+        if (nene_choice == true)
+        {
+            //ネネが攻撃をする最終確認
+            nene_action_judge = (int)CHARACTER_ACTION_JUDGE.ATTACK;
+            //バトルコマンドを非表示
+            nene_button_commands.gameObject.SetActive(false);
+            //キャンセルボタンの非表示
+            cancel_button_commands.gameObject.SetActive(false);
+            //判定を戻す
+            nene_choice = false;
+        }
+    }
+
+    
+
+        
+    //通常攻撃ボタン
+    public void Attack_Start_Button_Push()
+    {
+        //攻撃ボタンを押した判定
+        attack_button_push = true;
+        //ダメージテキストをランダムで表示
+        random_text = true;
+        //ボタンを消す
+        attack_stsart_button.gameObject.SetActive(false);
+        //シオンの通常攻撃
+        if (cs.ss.shion_dead_judge != true && shion_action_judge == (int)CHARACTER_ACTION_JUDGE.ATTACK)
+        {
+            //攻撃中の判定
+            shion_attacking_judge = true;
+            //アニメーション再生
+            shion_animation.SetBool("Normal_Attack", true);
+
+            //二番目のキャラが生きているときに限り
+            if (cs.ms.main_dead_judge == false)
+            {
+                //二番目のキャラクターの攻撃開始判定
+                main_attacking_judge = true;
+            }
+            //二番目のキャラが死んでいれば三番目のキャラが攻撃
+            if (cs.ms.main_dead_judge != false && cs.gs.gaia_dead_judge == false)
+            {
+                //ガイアの攻撃開始判定
+                gaia_attacking_judge = true;
+            }
+
+            //二番目のキャラと三番目のキャラが死んでいれば四番目のキャラが攻撃
+            if (cs.ms.main_dead_judge != false && cs.gs.gaia_dead_judge != false && cs.ns.nene_dead_judge == false)
+            {
+                //ネネの攻撃開始する
+                nene_attacking_judge = true;
+            }
+        }
+
+       //シオンが死んでいる場合マインが攻撃する///////////////////////////////////////////////
+        if (cs.ss.shion_dead_judge == true && cs.ms.main_dead_judge == false)
+        {
+            //二番目のキャラクターの攻撃開始判定
+            main_attacking_judge = true;
+            
+            //三番目のキャラが死んでいるとき四番目のキャラが攻撃する
+            if (cs.ns.nene_dead_judge == true && cs.gs.gaia_dead_judge == true && cs.ns.nene_dead_judge == false)
+            {
+                //ネネの攻撃開始する
+                nene_attacking_judge = true;
+            }
+
+        }
+
+        //シオンとマインが死んでいればガイアが攻撃
+        if (cs.ss.shion_dead_judge != false && cs.ms.main_dead_judge != false && cs.gs.gaia_dead_judge == false && gaia_action_judge == (int)CHARACTER_ACTION_JUDGE.ATTACK)
+        {
+            //攻撃中の判定
+            gaia_attacking_judge = true;
+        }
+
+        //ネネ以外が死んでいればネネが攻撃
+        if (cs.ss.shion_dead_judge != false && cs.ms.main_dead_judge != false && cs.gs.gaia_dead_judge != false && cs.ns.nene_dead_judge == false && nene_action_judge == (int)CHARACTER_ACTION_JUDGE.ATTACK)
+        {
+            //攻撃中の判定
+            nene_attacking_judge = true;
+        }
+
+    }
+
+
+
+
+    private void Shion_Attacking_Count()
+    {
+
+        //攻撃を終了するまでのカウント処理
+        if (shion_attacking_judge == true)
+        {
+            //通常攻撃アニメーション再生カウント変数
+            shion_attacking++;
+            //通常攻撃アニメーション
+            if (shion_attacking >= 30 && shion_attacking < 50)
+            {
+                //ダメージテキストを表示
+                shion_attack_text.gameObject.SetActive(true);
+                //エフェクトを表示
+                shion_normal_attack_effect.gameObject.SetActive(true);
+                //効果音を一度だけ再生
+                if (attack_music_judge[0] == false)
+                {
+                    //効果音再生
+                    audio_player.PlayOneShot(shion_normal_attack);
+                    //効果音を一度だけ再生
+                    attack_music_judge[0] = true;
+                }
+            }
+            if (shion_attacking >= 50)
+            {
+                //エフェクトの非表示
+                shion_normal_attack_effect.gameObject.SetActive(false);
+                //テキストの非表示
+                shion_attack_text.gameObject.SetActive(false);
+            }
+        }
+
+        
+
+        //1秒後アニメーションを戻す
+        if (shion_attacking >= 60)
+        {
+            //攻撃中の判定を戻す
+            shion_attacking_judge = false;
+            //通常攻撃のアニメーション非再生
+            shion_animation.SetBool("Normal_Attack", false);
+            //アニメーション再生カウントを戻す
+            shion_attacking = 0;
+            //再度鳴らす準備をする
+            attack_music_judge[0] = false;
+            //二番目のキャラと三番目と四番目のキャラが死んでいればサタンが攻撃する
+            if (cs.ms.main_dead_judge != false && cs.gs.gaia_dead_judge != false && cs.ns.nene_dead_judge != false)
+            {
+                //サタンが攻撃する判定
+                ss.GetComponent<Satan_Script>().satan_attack_judge = true;
+                //ボタンを再度押していない判定
+                attack_button_push = false;
+            }
+        }
+
+        //二番目のキャラクターの攻撃アニメーション再生判定
+        if (main_attacking_judge == true)
+        {
+            //攻撃判定カウント
+            second_character_attack++;
+            //攻撃中の判定
+            main_attacking_judge = true;
+
+            //通常攻撃アニメーション
+            if (second_character_attack >= 60 && second_character_attack < 70)
+            {
+                main_normal_attack_effect.gameObject.SetActive(true);
+                //ダメージテキストを表示
+                main_attack_text.gameObject.SetActive(true);
+                //効果音を一度だけ再生
+                if (attack_music_judge[1] == false)
+                {
+                    //効果音再生
+                    audio_player.PlayOneShot(main_normal_attack);
+                    //効果音を一度だけ再生
+                    attack_music_judge[1] = true;
+                }
+            }
+            if (second_character_attack >= 80)
+            {
+                //エフェクトを非表示
+                main_normal_attack_effect.gameObject.SetActive(false);
+                //ダメージテキストを非表示
+                main_attack_text.gameObject.SetActive(false);
+            }
+        }
+
+        //少し間隔をあけて再生
+        if (second_character_attack >= 30 && second_character_attack <= 40)
+        {
+            //攻撃をする判定
+            main_attacking_judge = true;
+            //通常攻撃の判定
+            main_animation.SetBool("Normal_Attack", true);
+
+            //ガイアが生きているときのみガイアが攻撃を始める
+            if (cs.gs.gaia_dead_judge == false)
+            {
+                //ガイアの攻撃開始判定
+                gaia_attacking_judge = true;
+            }
+            //ガイアが死んでいればネネが攻撃する
+            if (cs.gs.gaia_dead_judge == true && cs.ns.nene_dead_judge == false)
+            {
+                //ネネが攻撃する
+                nene_attacking_judge = true;
+            }
+        }
+        //マイン1秒後アニメーションを戻す
+        if (second_character_attack >= 90)
+        {
+            //アニメーション非再生
+            main_animation.SetBool("Normal_Attack", false);
+            
+            //攻撃判定カウントを戻す
+            main_attacking_judge = false;
+            //二番目のキャラクターの判定を戻す
+            second_character_attack = 0;
+            //再度鳴らす準備をする
+            attack_music_judge[1] = false;
+            //三番目と四番目のキャラが死んでいればサタンが攻撃する
+            if (cs.gs.gaia_dead_judge != false && cs.ns.nene_dead_judge != false)
+            {
+                //サタンが攻撃する判定
+                ss.GetComponent<Satan_Script>().satan_attack_judge = true;
+                //ボタンを再度押していない判定
+                attack_button_push = false;
+            }
+
+        }
+
+        if (gaia_attacking_judge == true)
+        {
+            thild_character_attack++;
+        }
+
+        //少し間隔をあけて再生(ガイア)
+        if (thild_character_attack >= 20)
+        {
+            //通常攻撃の判定
+            gaia_animation.SetBool("Normal_Attack", true);
+            //ネネの攻撃開始する
+            nene_attacking_judge = true;
+        }
+
+        //ガイア攻撃を終了するまでのカウント処理
+        if (gaia_attacking_judge == true)
+        {
+            //ガイアの攻撃カウント
+            gaia_attacking++;
+
+            //通常攻撃アニメーション
+            if (gaia_attacking >= 50 && gaia_attacking < 60)
+            {
+                gaia_normal_attack_effect.gameObject.SetActive(true);
+                //ガイアのダメージテキストを表示
+                gaia_attack_text.gameObject.SetActive(true);
+                //効果音を一度だけ再生
+                if (attack_music_judge[2] == false)
+                {
+                    //効果音再生
+                    audio_player.PlayOneShot(gaia_normal_attack);
+                    //効果音を一度だけ再生
+                    attack_music_judge[2] = true;
+                }
+            }
+           
+        }
+
+        //ガイア1秒後アニメーションを戻す
+        if (gaia_attacking >= 60)
+        {
+            //ガイアのダメージテキストを非表示
+            gaia_attack_text.gameObject.SetActive(false);
+            //アニメーション非再生
+            gaia_animation.SetBool("Normal_Attack", false);
+            //ガイアの攻撃判定を戻す
+            gaia_attacking_judge = false;
+            //ガイアの攻撃カウントを戻す
+            gaia_attacking = 0;
+            gaia_normal_attack_effect.gameObject.SetActive(false);
+            //３番目のキャラクターの判定を戻す
+            thild_character_attack = 0;
+            //効果音を一度だけ再生
+            attack_music_judge[2] = false;
+            //三番目と四番目のキャラが死んでいればサタンが攻撃する
+            if (cs.ns.nene_dead_judge != false)
+            {
+                //サタンが攻撃する判定
+                ss.GetComponent<Satan_Script>().satan_attack_judge = true;
+                //ボタンを再度押していない判定
+                attack_button_push = false;
+            }
+        }
+
+        //ネネが攻撃するときの処理
+        if (nene_attacking_judge == true)
+        {
+            forth_character_attack++;
+            //通常攻撃アニメーション
+            if (nene_attacking >= 50 && nene_attacking < 60)
+            {
+                //エフェクトを非表示
+                nene_normal_attack_effect.gameObject.SetActive(true);
+                //ダメージテキストを表示
+                nene_attack_text.gameObject.SetActive(true);
+                //効果音を一度だけ再生
+                if (attack_music_judge[3] == false)
+                {
+                    //効果音再生
+                    audio_player.PlayOneShot(nene_normal_attack);
+                    //効果音を一度だけ再生
+                    attack_music_judge[3] = true;
+                }
+            }
+        }
+
+        //少し間隔をあけて再生(ネネ)
+        if (forth_character_attack >= 20)
+        {
+            //攻撃をする判定
+            nene_attacking_judge = true;
+            //通常攻撃の判定
+            nene_animation.SetBool("Normal_Attack", true);
+        }
+
+        //ネネ攻撃を終了するまでのカウント処理
+        if (nene_attacking_judge == true)
+        {
+            //ネネの攻撃カウント
+            nene_attacking++;
+        }
+
+        //ネネ1秒後アニメーションを戻す
+        if (nene_attacking >= 60)
+        {
+            //アニメーション非再生
+            nene_animation.SetBool("Normal_Attack", false);
+            //ネネの攻撃判定を戻す
+            nene_attacking_judge = false;
+            //ネネの攻撃カウントを戻す
+            nene_attacking = 0;
+            //効果音を一度だけ再生
+            attack_music_judge[3] = false;
+            //エフェクトを非再生
+            nene_normal_attack_effect.gameObject.SetActive(false);
+            //4番目のキャラクターの判定を戻す
+            forth_character_attack = 0;
+            //ダメージテキストを非表示
+            nene_attack_text.gameObject.SetActive(false);
+            ss.GetComponent<Satan_Script>().satan_attack_turn = true;
+            //ダメージテキストをランダムで表示
+            random_text = false;
+            //合計ダメージを引く
+            ss.GetComponent<Satan_Script>().ses.satan_hp -= random_shion_damage + random_main_damage + random_gaia_damage + random_nene_damage;
+            //サタンが攻撃する判定
+            ss.GetComponent<Satan_Script>().satan_attack_judge = true;
+            //ボタンを再度俺湯判定
+            attack_button_push = false;
+
+        }
+    }
+
+    //味方キャラクターが攻撃されたときのアニメーション関数
+    private void Enemy_Attack_Animation()
+    {
+       if(ss.satan_attack_judge ==true && ss.GetComponent<Satan_Script>().random_attack_choice == (int)ATTACK_SATAN_CHOICE.SHION || ss.satan_attack_judge == true && ss.big_magic_judge == true)
+        {
+            //攻撃を受けた時の処理
+            shion_animation.SetBool("Enemy_Attack_Shion", true);
+
+        }
+        if(ss.satan_attack_judge == false)
+        {
+            //攻撃を受けた時の処理
+            shion_animation.SetBool("Enemy_Attack_Shion", false);
+        }
+
+        if (ss.satan_attack_judge == true && ss.GetComponent<Satan_Script>().random_attack_choice == (int)ATTACK_SATAN_CHOICE.MAIN || ss.satan_attack_judge == true && ss.big_magic_judge == true)
+        {
+            //攻撃を受けた時の処理
+            main_animation.SetBool("Enemy_Attack_Main", true);
+
+        }
+        
+        if(ss.satan_attack_judge == false)
+        {
+            //攻撃を受けた時の処理
+            main_animation.SetBool("Enemy_Attack_Main", false);
+        }
+
+        
+        if (ss.satan_attack_judge == true && ss.GetComponent<Satan_Script>().random_attack_choice == (int)ATTACK_SATAN_CHOICE.GAIA || ss.satan_attack_judge == true && ss.big_magic_judge == true)
+        {
+            //攻撃を受けた時の処理
+            gaia_animation.SetBool("Enemy_Attack_Gaia", true);
+
+        }
+        if (ss.satan_attack_judge == false)
+        {
+            //攻撃を受けた時の処理
+            gaia_animation.SetBool("Enemy_Attack_Gaia", false);
+        }
+
+        if (ss.satan_attack_judge == true && ss.GetComponent<Satan_Script>().random_attack_choice == (int)ATTACK_SATAN_CHOICE.NENE || ss.satan_attack_judge == true && ss.big_magic_judge == true)
+        {
+            //攻撃を受けた時の処理
+            nene_animation.SetBool("Enemy_Attack_Nene", true);
+
+        }
+
+        if (ss.satan_attack_judge == false)
+        {
+            //攻撃を受けた時の処理
+            nene_animation.SetBool("Enemy_Attack_Nene", false);
+        }
+
+    }
+
+    
+	// Use this for initialization
+	void Start () {
+        Fast_Battle_Status();
+
+    }
+	
+	// Update is called once per frame
+	void Update () {
+
+        Game_Object_SetActive_False();
+        Shion_Attacking_Count();
+        Enemy_Attack_Animation();
+    }
+}
